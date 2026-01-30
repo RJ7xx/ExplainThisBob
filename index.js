@@ -61,6 +61,38 @@ async function login() {
     }
 }
 
+async function reply(replyText, replyToTweetId) {
+    if (!LOGIN_COOKIE) {
+        return console.error('No login cookie available for reply.');
+    }
+
+    try {
+        const response = await fetch('https://api.twitterapi.io/twitter/create_tweet_v2', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': CONFIG.TWITTER_API_KEY
+            },
+            body: JSON.stringify({
+                login_cookies: LOGIN_COOKIE,
+                tweet_text: replyText,
+                proxy: CONFIG.PROXY,
+                reply_to_tweet_id: replyToTweetId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.status !== 'success') {
+            throw new Error(data.msg || 'Unknown error');
+        }
+
+        console.log(`Tweet reply sent! Tweet ID: ${data.tweet_id}`);
+    } catch (error) {
+        console.error('Error sending Twitter reply:', error);
+    }
+}
+
 async function getAIResponse(question, imageUrls = []) {
     try {
         const content = [];
@@ -90,7 +122,7 @@ async function getAIResponse(question, imageUrls = []) {
                 messages: [
                     {
                         role: 'system',
-                        content: 'Respond as ExplainThisBob, an internet meme character known for over-explaining jokes and obvious statements.\n\nYour response should:\n- Be technically correct but unnecessarily detailed\n- Break down obvious ideas step-by-step\n- Use an academic, analytical tone\n- Miss the emotional or social point slightly\n- Explain things that most people already understand\n- Sound earnest, not sarcastic\n\nThe humor should come from excessive clarification, not from jokes or punchlines. Do not mention that you are an AI or that you are parodying anything. Simply explain.\n\nKeep responses short and concise - maximum 2-3 sentences.'
+                        content: 'Respond as ExplainThisBob, an internet meme character known for over-explaining jokes and obvious statements.\n\nYour response should:\n- Be technically correct but unnecessarily detailed\n- Break down obvious ideas step-by-step\n- Use an academic, analytical tone\n- Miss the emotional or social point slightly\n- Do not use EM dashes\n- Explain things that most people already understand\n- Sound earnest, not sarcastic\n\nThe humor should come from excessive clarification, not from jokes or punchlines. Do not mention that you are an AI or that you are parodying anything. Simply explain.\n\nKeep responses short and concise - maximum 2-3 sentences.'
                     },
                     {
                         role: 'user',
@@ -228,7 +260,7 @@ async function processTweet(tweet) {
         const aiResponse = await getAIResponse(fullContext, imageUrls);
         console.log(`AI Response received: ${aiResponse.substring(0, 100)}${aiResponse.length > 100 ? '...' : ''}`);
 
-        await sendTwitterReply(aiResponse, tweet.id);
+        await reply(aiResponse, tweet.id);
     } catch (error) {
         console.error('Error processing tweet:', error.message);
     }
