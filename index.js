@@ -102,9 +102,7 @@ async function pollMentions() {
 
 async function fetchMentions() {
     try {
-        const url = `https://api.twitterapi.io/twitter/user/mentions?userName=${CONFIG.X_USERNAME}`;
-
-        const response = await fetch(url, {
+        const response = await fetch(`https://api.twitterapi.io/twitter/user/mentions?userName=${CONFIG.X_USERNAME}`, {
             headers: {
                 'X-API-Key': CONFIG.TWITTER_API_KEY
             }
@@ -179,6 +177,65 @@ async function processTweet(tweet) {
     } catch (error) {
         console.error('Error processing tweet:', error.message);
     }
+}
+
+function extractQuestion(tweet) {
+    const text = (tweet && tweet.text) ? tweet.text.trim() : '';
+
+    if (!text) {
+        return null;
+    }
+
+    const hasMonitorMention = (
+        (tweet.entities && Array.isArray(tweet.entities.user_mentions) && tweet.entities.user_mentions.some(m => m.screen_name && m.screen_name.toLowerCase() === CONFIG.X_USERNAME.toLowerCase())) || new RegExp(`@${CONFIG.X_USERNAME}\\b`, 'i').test(text)
+    );
+
+    if (!hasMonitorMention) {
+        return null;
+    }
+
+    let question = text.replace(new RegExp(`@${CONFIG.X_USERNAME}\\b`, 'gi'), '').trim();
+
+    return question;
+}
+
+async function fetchOriginalTweet(tweetId) {
+    try {
+        const response = await fetch(`https://api.twitterapi.io/twitter/tweets?tweet_ids=${tweetId}`, {
+            headers: {
+                'X-API-Key': CONFIG.TWITTER_API_KEY
+            }
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const data = await response.json();
+
+        if (data.tweets && data.tweets.length > 0) {
+            return data.tweets[0];
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error fetching original tweet:', error.message);
+        return null;
+    }
+}
+
+function extractImages(tweet) {
+    const imageUrls = [];
+
+    if (tweet.extendedEntities && tweet.extendedEntities.media && tweet.extendedEntities.media.length > 0) {
+        for (const media of tweet.extendedEntities.media) {
+            if (media.type === 'photo' && media.media_url_https) {
+                imageUrls.push(media.media_url_https);
+            }
+        }
+    }
+
+    return imageUrls;
 }
 
 function saveTrackedTweets() {
