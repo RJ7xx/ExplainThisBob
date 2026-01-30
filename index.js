@@ -123,6 +123,64 @@ async function fetchMentions() {
     }
 }
 
+async function processQueue() {
+    if (processing || queue.length === 0) {
+        return;
+    }
+
+    processing = true;
+
+    while (queue.length > 0) {
+        const tweet = queue.shift();
+        await processTweet(tweet);
+
+        if (queue.length > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+
+    processing = false;
+}
+
+async function processTweet(tweet) {
+    try {
+        console.log(`Processing tweet ${tweet.id}...`);
+
+        const question = extractQuestion(tweet);
+        if (!question) {
+            return console.log(`Tweet ${tweet.id} - no bot mention or invalid format, skipping`);
+        }
+
+        console.log(`Question extracted: '${question}'`);
+        let fullContext = question;
+        const imageUrls = extractImages(tweet);
+
+        // If this is a reply, then it fetches the original tweet for context
+        if (tweet.isReply && tweet.inReplyToId) {
+            console.log(`Fetching original tweet ${tweet.inReplyToId} for context...`);
+            const originalTweet = await fetchOriginalTweet(tweet.inReplyToId);
+
+            if (originalTweet) {
+                fullContext = `Original tweet by @${originalTweet.author.userName}: '${originalTweet.text}'\n\nReply: ${question}`;
+                console.log(`Added original tweet context`);
+            }
+        }
+
+        console.log(`Calling AI with question: ${fullContext.substring(0, 80)}`);
+
+        if (imageUrls.length > 0) {
+            console.log(`Tweet has ${imageUrls.length} image(s)`);
+        }
+
+        const aiResponse = await getAIResponse(fullContext, imageUrls);
+        console.log(`AI Response received: ${aiResponse.substring(0, 100)}${aiResponse.length > 100 ? '...' : ''}`);
+
+        await sendTwitterReply(aiResponse, tweet.id);
+    } catch (error) {
+        console.error('Error processing tweet:', error.message);
+    }
+}
+
 function saveTrackedTweets() {
     try {
         fs.writeFileSync(TRACKED_TWEETS_FILE, JSON.stringify(Array.from(trackedTweets), null, 2));
