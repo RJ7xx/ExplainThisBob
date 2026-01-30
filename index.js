@@ -22,7 +22,7 @@ let LOGIN_COOKIE = null;
 const queue = [];
 let processing = false;
 
-const TRACKED_TWEETS_FILE = path.join(__dirname, 'tracked_ai_tweets.json');
+const TRACKED_TWEETS_FILE = path.join(__dirname, 'tweets.json');
 const trackedTweets = new Set();
 
 async function login() {
