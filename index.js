@@ -238,6 +238,23 @@ function extractImages(tweet) {
     return imageUrls;
 }
 
+function loadTrackedTweets() {
+    try {
+        if (fs.existsSync(TRACKED_TWEETS_FILE)) {
+            const data = fs.readFileSync(TRACKED_TWEETS_FILE, 'utf8');
+            const count = JSON.parse(data).length;
+
+            JSON.parse(data).forEach(id => trackedTweets.add(id));
+
+            console.log(`Loaded ${count} tracked tweets`);
+        } else {
+            console.log('No tracked tweets file yet');
+        }
+    } catch (error) {
+        console.error('Error loading tracked tweets:', error.message);
+    }
+}
+
 function saveTrackedTweets() {
     try {
         fs.writeFileSync(TRACKED_TWEETS_FILE, JSON.stringify(Array.from(trackedTweets), null, 2));
@@ -247,6 +264,8 @@ function saveTrackedTweets() {
 }
 
 async function main() {
+    loadTrackedTweets();
+
     await login();
 
     await pollMentions();
