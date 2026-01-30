@@ -61,6 +61,61 @@ async function login() {
     }
 }
 
+async function getAIResponse(question, imageUrls = []) {
+    try {
+        const content = [];
+
+        content.push({
+            type: 'text',
+            text: question
+        });
+
+        for (const imageUrl of imageUrls) {
+            content.push({
+                type: 'image_url',
+                image_url: {
+                    url: imageUrl
+                }
+            });
+        }
+
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${CONFIG.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'openai/gpt-5-mini',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'Respond as ExplainThisBob, an internet meme character known for over-explaining jokes and obvious statements.\n\nYour response should:\n- Be technically correct but unnecessarily detailed\n- Break down obvious ideas step-by-step\n- Use an academic, analytical tone\n- Miss the emotional or social point slightly\n- Explain things that most people already understand\n- Sound earnest, not sarcastic\n\nThe humor should come from excessive clarification, not from jokes or punchlines. Do not mention that you are an AI or that you are parodying anything. Simply explain.\n\nKeep responses short and concise - maximum 2-3 sentences.'
+                    },
+                    {
+                        role: 'user',
+                        content: content
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`OpenRouter API returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+            return data.choices[0].message.content;
+        }
+
+        return 'No response from OpenRouter';
+    } catch (error) {
+        console.error('Error getting AI response:', error.message);
+        return `Error: ${error.message}`;
+    }
+}
+
 async function pollMentions() {
     try {
         console.log(`[ ${new Date().toISOString()} ] Polling mentions...`);
