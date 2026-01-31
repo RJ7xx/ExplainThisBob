@@ -16,7 +16,7 @@ Then you just need to input the bot's account information
 <br>
 
 You will also need to get a static residential proxy
-> Do not use free proxies, instead get "static residential" proxies from [webshare.io](https://www.webshare.io) for about $6.
+> Do not use free proxies, instead get "static residential" proxies from [webshare.io](https://www.webshare.io) for about $6. Example of what you would get `http://user:pass:ip:port` / `http://jhupgwvy:z849fz98dk1p:45.56.177.96:8897`
 
 <hr>
 <h3>Steps on how to run the code:</h3>
