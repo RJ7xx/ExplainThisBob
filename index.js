@@ -354,7 +354,6 @@ async function main() {
     loadTrackedTweets();
 
     await login();
-
     await pollMentions();
 
     setInterval(() => {
