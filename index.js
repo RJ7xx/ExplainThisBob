@@ -7,7 +7,7 @@ const path = require('path');
 const CONFIG = {
     TWITTER_API_KEY: '',
     OPENROUTER_API_KEY: '',
-    REFRESH_INTERVAL: 2000,
+    REFRESH_INTERVAL: 3000,
 
     X_USERNAME: '',
     X_EMAIL: '',
