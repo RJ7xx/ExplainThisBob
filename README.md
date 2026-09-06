@@ -1,5 +1,6 @@
 # ExplainThisBob
-
+Live bot at [@ExplainByBob](https://x.com/ExplainByBob) on X
+<hr>
 So I created this bot because I liked the meme. I saw some other devs create this and tokenise it but they always scammed their users for pennies which was pretty stupid.
 
 I'll explain how to run your own version of Bob, basically your own AI on X.
